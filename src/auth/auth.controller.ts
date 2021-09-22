@@ -21,17 +21,19 @@ export class AuthController {
   @UsePipes(new ValidationPipe())
   @HttpCode(200)
   @Post('login')
-  login(@Body() dto: AuthModel) {
-    return {
-      login: true,
-      ...dto,
-    };
+  async login(@Body() dto: AuthDto) {
+    const { name, ...authDTO } = dto;
+
+    const emailFromDB = await this.authService.validateUser(authDTO);
+    const { email } = emailFromDB;
+    return this.authService.login(email);
   }
 
+  @UsePipes(new ValidationPipe())
   @Post('register')
   async register(@Body() dto: AuthDto) {
     const user = await this.authService.findUser(dto.email);
-    console.log(user);
+    // console.log(user);
 
     if (user) {
       throw new BadGatewayException(USER_REGISTERED);
